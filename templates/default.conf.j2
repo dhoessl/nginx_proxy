@@ -1,0 +1,61 @@
+# {{ ansible_managed }}
+server {
+  # basic configs
+  {% if item.ssl|default(false) sameas true -%}
+  listen 443 ssl;
+  {% if item.ipv6|default(false) sameas true -%}
+  listen [::]:443 ssl;
+  {% endif -%}
+  {% else -%}
+  listen 80;
+  {% if item.ipv6|default(false) sameas true -%}
+  listen [::]:80;
+  {% endif -%}
+  {% endif -%}
+
+  server_name {{ item.domain }};
+
+  {% if item.ssl|default(false) sameas true -%}
+  # SSL Certs
+  ssl_certificate       {{ item.certificate.pub }}
+  ssl_certificate_key   {{ item.certificate.key }}
+
+  # SSL Hardening
+  ssl_protocols               {{ item.protocols|default('TLSv1.3 TLSv1.2') }};
+  ssl_ciphers                 {{ item.ciphers|default('RSA:!EXP:!NULL:+HIGH:+MEDIUM:-LOW') }};
+  ssl_prefer_server_ciphers   on;
+  ssl_session_tickets         off;
+  {% endif -%}
+
+  # Hardening
+  add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+
+  # Client Settings
+  client_max_body_size    {{ item.client.max_body_size|default('1M') }};
+  client_body_timeout     {{ item.client.body_timeout|default('60s') }};
+
+  # Fastcgi
+  fastcgi_buffers         {{ item.fastcgi.buffer.number|default('8') }} {{ item.fastcgi.buffer.size|default('4K') }};
+  {% if item.fastcgi.hide_header -%}
+  {% for field in item.fastcgi.hide_header|default([]) -%}
+  fastcgi_hide_header     {{ field }};
+  {% endfor -%}
+  {% endif -%}
+
+    # Proxy Settings
+  location / {
+    proxy_pass            http://localhost:{{ item.proxy.port }}/;
+    proxy_http_version    {{ item.proxy.version|default('1.1') }};
+    {% if item.proxy.default_header|default(true) is sameas true -%}
+    proxy_set_header      Upgrade             $http_upgrade;
+    proxy_set_header      Connection          "Upgrade";
+    proxy_set_header      Host                $host;
+    proxy_set_header      X-Real-IP           $remote_addr;
+    proxy_set_header      X-Forwarded_for     $proxy_add_x_forwarded_for;
+    proxy_set_header      X-Forwarded-Proto   $scheme;
+    {% endif -%}
+    {% for header in item.proxy.header|default([]) -%}
+      proxy_set_header  {{ header.field }} {{ header.value }};
+    {% endfor -%}
+  }
+}

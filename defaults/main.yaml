@@ -1,0 +1,7 @@
+---
+role_nginx:
+  package:
+    name: 'nginx'
+  dir: '/etc/nginx'
+  vhosts: {}
+...

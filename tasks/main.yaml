@@ -1,0 +1,45 @@
+---
+- name: 'install nginx'
+  apt:
+    name: '{{ role_nginx.package.name }}'
+    state: 'present'
+  tags:
+    - 'never'
+    - 'nginx:init'
+  notify:
+    - 'enable nginx'
+
+- name: 'disable default config'
+  file:
+    path: '{{ role_nginx.dir }}/sites-enabled/default'
+    state: 'absent'
+  tags:
+    - 'never'
+    - 'nginx:init'
+
+- name: 'install config'
+  template:
+    src: 'templates/default.conf.j2'
+    dest: '{{ role_nginx.dir }}/sites-available/{{ item.domain }}.conf'
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+  loop: '{{ role_nginx.vhosts|dict2items }}'
+  notify:
+    - 'reload nginx'
+  tags:
+    - 'nginx:config'
+
+- name: 'enable config'
+  file:
+    src: '{{ role_nginx.dir }}/sites-available/{{ item.domain }}.conf'
+    dest: '{{ role_nginx.dir }}/sites-enabled/{{ item.domain }}.conf'
+    owner: 'root'
+    group: 'root'
+    state: 'link'
+  loop: '{{ role_nginx.vhosts|dict2items }}'
+  notify:
+    - 'reload nginx'
+  tags:
+    - 'nginx:config'
+...
