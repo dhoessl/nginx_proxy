@@ -1,7 +1,7 @@
 ---
 - name: 'install nginx'
   apt:
-    name: '{{ role_nginx.package.name }}'
+    name: '{{ role_nginx_package }}'
     state: 'present'
   tags:
     - 'never'
@@ -11,7 +11,7 @@
 
 - name: 'disable default config'
   file:
-    path: '{{ role_nginx.dir }}/sites-enabled/default'
+    path: '{{ role_nginx_dir }}/sites-enabled/default'
     state: 'absent'
   tags:
     - 'never'
@@ -20,26 +20,21 @@
 - name: 'install config'
   template:
     src: 'templates/default.conf.j2'
-    dest: '{{ role_nginx.dir }}/sites-available/{{ item.domain }}.conf'
+    dest: '{{ role_nginx_dir }}/sites-available/{{ item.value.domain }}.conf'
     owner: 'root'
     group: 'root'
     mode: '0644'
-  loop: '{{ role_nginx.vhosts|dict2items }}'
+  loop: '{{ role_nginx_vhosts|dict2items }}'
   notify:
     - 'reload nginx'
   tags:
     - 'nginx:config'
 
-- name: 'enable config'
-  file:
-    src: '{{ role_nginx.dir }}/sites-available/{{ item.domain }}.conf'
-    dest: '{{ role_nginx.dir }}/sites-enabled/{{ item.domain }}.conf'
-    owner: 'root'
-    group: 'root'
-    state: 'link'
-  loop: '{{ role_nginx.vhosts|dict2items }}'
-  notify:
-    - 'reload nginx'
+- name: 'enable disable config'
+  include_tasks: 'enable_disable_config.yaml'
+  loop: '{{ role_nginx_vhosts| dict2items }}'
+  loop_control:
+    loop_var: 'vhosts'
   tags:
-    - 'nginx:config'
+    - 'ngnix:config'
 ...

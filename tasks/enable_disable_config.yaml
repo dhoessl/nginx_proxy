@@ -1,0 +1,20 @@
+---
+- name: 'enable config'
+  file:
+    src: '{{ role_nginx_dir }}/sites-available/{{ vhosts.value.domain }}.conf'
+    dest: '{{ role_nginx_dir }}/sites-enabled/{{ vhosts.value.domain }}.conf'
+    owner: 'root'
+    group: 'root'
+    state: 'link'
+  notify:
+    - 'reload nginx'
+  when: 'vhosts.value.state|default(true) == true'
+
+- name: 'disable config'
+  file:
+    path: '{{ role_nginx_dir }}/sites-enabled/{{ vhosts.value.domain }}.conf'
+    state: 'absent'
+  notify:
+    - 'reload nginx'
+  when: 'vhosts.value.state|default(true) == false'
+...
