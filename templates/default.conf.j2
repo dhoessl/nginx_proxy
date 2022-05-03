@@ -1,28 +1,32 @@
 # {{ ansible_managed }}
 server {
   # basic configs
-  {% if item.ssl|default(false) sameas true -%}
+  {% if item.value.ssl|default(false) is sameas true -%}
+  {% if item.value.ipv4|default(true) is sameas true -%}
   listen 443 ssl;
-  {% if item.ipv6|default(false) sameas true -%}
+  {% endif -%}
+  {% if item.value.ipv6|default(false) is sameas true and item.value.ipv4|default(true) is sameas true-%}
   listen [::]:443 ssl;
+  {% elif item.value.ipv6|default(false) is sameas true and item.value.ipv4|default(true) is sameas false -%}
+  listen [::]:443 ssl ipv6only=on;
   {% endif -%}
   {% else -%}
   listen 80;
-  {% if item.ipv6|default(false) sameas true -%}
+  {% if item.value.ipv6|default(false) is sameas true -%}
   listen [::]:80;
   {% endif -%}
   {% endif -%}
 
-  server_name {{ item.domain }};
+  server_name {{ item.value.domain }};
 
-  {% if item.ssl|default(false) sameas true -%}
+  {% if item.value.ssl|default(false) is sameas true -%}
   # SSL Certs
-  ssl_certificate       {{ item.certificate.pub }}
-  ssl_certificate_key   {{ item.certificate.key }}
+  ssl_certificate       {{ item.value.certificate.pub }};
+  ssl_certificate_key   {{ item.value.certificate.key }};
 
   # SSL Hardening
-  ssl_protocols               {{ item.protocols|default('TLSv1.3 TLSv1.2') }};
-  ssl_ciphers                 {{ item.ciphers|default('RSA:!EXP:!NULL:+HIGH:+MEDIUM:-LOW') }};
+  ssl_protocols               {{ item.value.protocols|default('TLSv1.3 TLSv1.2') }};
+  ssl_ciphers                 {{ item.value.ciphers|default('RSA:!EXP:!NULL:+HIGH:+MEDIUM:-LOW') }};
   ssl_prefer_server_ciphers   on;
   ssl_session_tickets         off;
   {% endif -%}
@@ -31,22 +35,25 @@ server {
   add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
 
   # Client Settings
-  client_max_body_size    {{ item.client.max_body_size|default('1M') }};
-  client_body_timeout     {{ item.client.body_timeout|default('60s') }};
+  client_max_body_size    {{ item.value.client.max_body_size|default('1M') }};
+  client_body_timeout     {{ item.value.client.body_timeout|default('60s') }};
 
+  {% if item.value.fastcgi is defined -%}
   # Fastcgi
-  fastcgi_buffers         {{ item.fastcgi.buffer.number|default('8') }} {{ item.fastcgi.buffer.size|default('4K') }};
-  {% if item.fastcgi.hide_header -%}
-  {% for field in item.fastcgi.hide_header|default([]) -%}
+  fastcgi_buffers         {{ item.value.fastcgi.buffer.number|default('8') }} {{ item.value.fastcgi.buffer.size|default('4K') }};
+  {% if item.value.fastcgi.hide_header -%}
+  {% for field in item.value.fastcgi.hide_header|default([]) -%}
   fastcgi_hide_header     {{ field }};
   {% endfor -%}
   {% endif -%}
+  {% endif -%}
 
-    # Proxy Settings
+  {% if item.value.proxy is defined -%}
   location / {
-    proxy_pass            http://localhost:{{ item.proxy.port }}/;
-    proxy_http_version    {{ item.proxy.version|default('1.1') }};
-    {% if item.proxy.default_header|default(true) is sameas true -%}
+    # Proxy Settings
+    proxy_pass            http://localhost:{{ item.value.proxy.port }}/;
+    proxy_http_version    {{ item.value.proxy.version|default('1.1') }};
+    {% if item.value.proxy.default_header|default(true) is sameas true -%}
     proxy_set_header      Upgrade             $http_upgrade;
     proxy_set_header      Connection          "Upgrade";
     proxy_set_header      Host                $host;
@@ -54,8 +61,17 @@ server {
     proxy_set_header      X-Forwarded_for     $proxy_add_x_forwarded_for;
     proxy_set_header      X-Forwarded-Proto   $scheme;
     {% endif -%}
-    {% for header in item.proxy.header|default([]) -%}
+    {% for header in item.value.proxy.header|default([]) -%}
       proxy_set_header  {{ header.field }} {{ header.value }};
     {% endfor -%}
   }
+  {% endif -%}
+  {% if item.value.static is defined and item.value.static.locations is defined-%}
+  {% for loc in item.value.static.locations|default([]) -%}
+  location {{ loc.location|default('/') }} {
+    default_type      {{ loc.default_type|default('application/json') }};
+    return            {{ loc.rc|default('200') }} {{ loc.output|default("'{}'") }};
+  }
+  {% endfor -%}
+  {% endif -%}
 }
