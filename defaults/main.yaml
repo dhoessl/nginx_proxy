@@ -1,7 +1,5 @@
 ---
-role_nginx:
-  package:
-    name: 'nginx'
-  dir: '/etc/nginx'
-  vhosts: {}
+role_nginx_package: 'nginx'
+role_nginx_dir: '/etc/nginx'
+role_nginx_vhosts: {}
 ...
