@@ -1,6 +1,7 @@
 # nginx_proxy
-Role for ansible to manage docker containers
+Role for ansible to manage nginx proxy settings for docker containers
 
+```
 role_nginx:
   vhosts:
     test.dhoessl.de:
@@ -49,3 +50,4 @@ role_nginx:
           size: '4K'
         hide_header:
           - 'X-Powered-By'
+```
