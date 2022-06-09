@@ -69,7 +69,9 @@ server {
   {% if item.value.static is defined and item.value.static.locations is defined-%}
   {% for loc in item.value.static.locations|default([]) -%}
   location {{ loc.location|default('/') }} {
+    {% if loc.default_type is defined -%}
     default_type      {{ loc.default_type|default('application/json') }};
+    {% endif -%}
     return            {{ loc.rc|default('200') }} {{ loc.output|default("'{}'") }};
   }
   {% endfor -%}
