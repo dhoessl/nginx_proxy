@@ -72,7 +72,12 @@ server {
     {% if loc.default_type is defined -%}
     default_type      {{ loc.default_type|default('application/json') }};
     {% endif -%}
+    {% if loc.rc is defined and loc.output is defined -%}
     return            {{ loc.rc|default('200') }} {{ loc.output|default("'{}'") }};
+    {% endif -%}
+    {% if loc.data is defined -%}
+    {{ loc.data }}
+    {% endif -%}
   }
   {% endfor -%}
   {% endif -%}
