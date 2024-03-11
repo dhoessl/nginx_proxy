@@ -17,7 +17,7 @@
     - 'never'
     - 'nginx:init'
 
-- name: 'install config'
+- name: 'install vhost config'
   template:
     src: 'templates/default.conf.j2'
     dest: '{{ role_nginx_dir }}/sites-available/{{ item.value.domain }}.conf'
@@ -30,9 +30,9 @@
   tags:
     - 'nginx:config'
 
-- name: 'enable disable config'
+- name: 'enable disable vhost config'
   include_tasks: 'enable_disable_config.yaml'
-  loop: '{{ role_nginx_vhosts| dict2items }}'
+  loop: '{{ role_nginx_vhosts|dict2items }}'
   loop_control:
     loop_var: 'vhosts'
   tags:
