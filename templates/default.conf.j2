@@ -28,8 +28,8 @@ server {
   ssl_protocols               {{ item.value.protocols|default('TLSv1.3') }};
   ssl_prefer_server_ciphers   on;
   ssl_ciphers                 {{ item.value.ciphers|default('EECDH+CHACHA20:EECDH+AESGCM:EDH+AESGCM') }};
-  # ssl_conf_command            Ciphersuites  TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256;
-  # ssl_conf_command            Options       PrioritizeChaCha;
+  ssl_conf_command            Ciphersuites  TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256;
+  ssl_conf_command            Options       PrioritizeChaCha;
   ssl_ecdh_curve              secp384r1;
   ssl_session_timeout         10m;
   ssl_session_cache           shared:SSL:10m;
