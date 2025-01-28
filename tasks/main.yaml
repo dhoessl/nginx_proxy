@@ -20,7 +20,7 @@
 - name: 'install vhost config'
   template:
     src: 'templates/default.conf.j2'
-    dest: '{{ role_nginx_dir }}/sites-available/{{ item.value.domain }}.conf'
+    dest: '{{ role_nginx_dir }}/sites-available/{{ item.key }}.conf'
     owner: 'root'
     group: 'root'
     mode: '0644'
