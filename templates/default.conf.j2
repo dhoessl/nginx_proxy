@@ -17,7 +17,7 @@ server {
   {% endif -%}
   {% endif -%}
 
-  server_name {{ item.value.domain }};
+  server_name {{ item.value.domains | join(" ") }};
 
   {% if item.value.ssl|default(false) is sameas true -%}
   # SSL Certs
