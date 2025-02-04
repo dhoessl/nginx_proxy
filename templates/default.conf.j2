@@ -64,7 +64,7 @@ server {
   {% if item.value.proxy is defined -%}
   location / {
     # Proxy Settings
-    proxy_pass            http://localhost:{{ item.value.proxy.port }}/{{ item.value.proxy.extend |default(omit) }};
+    proxy_pass            http://localhost:{{ item.value.proxy.port }}/{{ item.value.proxy.extend |default("") }};
     proxy_http_version    {{ item.value.proxy.version|default('1.1') }};
     {% if item.value.proxy.default_header|default(true) is sameas true -%}
     proxy_set_header      Upgrade             $http_upgrade;
