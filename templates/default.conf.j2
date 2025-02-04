@@ -19,8 +19,12 @@ server {
 
   server_name {{ item.value.domains | join(" ") }};
 
-  {% if item.value.charset is defined-%}
+  {% if item.value.charset is defined -%}
   charset {{ item.value.charset }};
+  {% endif -%}
+
+  {% if item.value.custom_data is defined -%}
+  {{ item.value.custom_data }}
   {% endif -%}
 
   {% if item.value.ssl|default(false) is sameas true -%}
