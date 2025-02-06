@@ -4,9 +4,9 @@ server {
   # forward http to https
   listen 80;
   {% if item.value.ipv6|default(false) is sameas true and item.value.ipv4|default(true) is sameas true -%}
-  listen ::80;
+  listen [::]:80;
   {% elif item.value.ipv6|default(false) is sameas true and item.value.ipv4|default(true) is sameas false -%}
-  listen ::80 ipv6only=on;
+  listen [::]:80 ipv6only=on;
   {% endif -%}
   server_name {{ item.value.domains | join(" ") }};
 
