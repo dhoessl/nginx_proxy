@@ -22,12 +22,12 @@ server {
   # basic configs
   {% if item.value.ssl|default(false) is sameas true -%}
   {% if item.value.ipv4|default(true) is sameas true -%}
-  listen 443 ssl{% if item.value.http2 | default(true) is sameas true -%} http2{% endif -%};
+  listen 443 ssl{% if item.value.http2 | default(true) is sameas true %} http2{% endif -%};
   {% endif -%}
   {% if item.value.ipv6|default(false) is sameas true and item.value.ipv4|default(true) is sameas true -%}
-  listen [::]:443 ssl{% if item.value.http2 | default(true) is sameas true -%} http2{% endif -%};
+  listen [::]:443 ssl{% if item.value.http2 | default(true) is sameas true %} http2{% endif -%};
   {% elif item.value.ipv6|default(false) is sameas true and item.value.ipv4|default(true) is sameas false -%}
-  listen [::]:443 ssl ipv6only=on{% if item.value.http2 | default(true) is sameas true -%} http2{% endif -%};
+  listen [::]:443 ssl ipv6only=on{% if item.value.http2 | default(true) is sameas true %} http2{% endif -%};
   {% endif -%}
   {% else -%}
   listen 80;
