@@ -35,6 +35,9 @@ server {
   listen [::]:80;
   {% endif -%}
   {% endif -%}
+  {% if item.value.doc_root is defined -%}
+  root {{ item.value.doc_root }};
+  {% endif -%}
 
   server_name {{ item.value.domains | join(" ") }};
 
