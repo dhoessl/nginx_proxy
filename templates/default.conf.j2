@@ -108,6 +108,9 @@ server {
     {% for header in item.value.proxy.header|default([]) -%}
       proxy_set_header  {{ header.field }} {{ header.value }};
     {% endfor -%}
+    {% if item.value.proxy.extra_data is defined -%}
+      {{ item.value.proxy.extra_data }}
+    {% endfor -%}
   }
   {% endif -%}
   {% if item.value.static is defined and item.value.static.locations is defined-%}
