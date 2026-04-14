@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  author: "dhoessl"
+  description: "Manage nginx config"
+  company: ""
+
+  license: "GPL-3.0-only"
+
+  min_ansible_version: "2.2"
+
+  galaxy_tags:
+    - "nginx"
+
+dependencies: []
+...

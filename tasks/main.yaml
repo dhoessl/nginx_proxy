@@ -1,40 +1,56 @@
 ---
-- name: 'install nginx'
-  apt:
-    name: '{{ role_nginx_package }}'
-    state: 'present'
+- name: "Install nginx"
+  ansible.builtin.apt:
+    name: "{{ nginx_package }}"
+    state: "present"
   tags:
-    - 'never'
-    - 'nginx:init'
+    - "nginx:init"
   notify:
-    - 'enable nginx'
+    - "Enable nginx"
 
-- name: 'disable default config'
-  file:
-    path: '{{ role_nginx_dir }}/sites-enabled/default'
-    state: 'absent'
-  tags:
-    - 'never'
-    - 'nginx:init'
-
-- name: 'install vhost config'
-  template:
-    src: 'templates/default.conf.j2'
-    dest: '{{ role_nginx_dir }}/sites-available/{{ item.key }}.conf'
-    owner: 'root'
-    group: 'root'
-    mode: '0644'
-  loop: '{{ role_nginx_vhosts|dict2items }}'
+- name: "Disable default config"
+  ansible.builtin.file:
+    path: "{{ nginx_dir }}/sites-enabled/default"
+    state: "absent"
   notify:
-    - 'reload nginx'
+    - "Reload nginx"
   tags:
-    - 'nginx:config'
+    - "nginx:init"
 
-- name: 'enable disable vhost config'
-  include_tasks: 'enable_disable_config.yaml'
-  loop: '{{ role_nginx_vhosts|dict2items }}'
+- name: "Install http to https forward"
+  ansible.builtin.template:
+    src: "templates/forward_http.conf.j2"
+    dest: "{{ nginx_dir }}/sites-available/{{ item.name }}.forward.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  loop: "{{ nginx_vhosts }}"
+  when: "item.forward_http | default(false)"
+  notify:
+    - "Reload nginx"
+  tags:
+    - "nginx:config"
+
+- name: "Install vhost configs"
+  ansible.builtin.template:
+    src: "templates/default.conf.j2"
+    dest: "{{ nginx_dir }}/sites-available/{{ item.name }}.conf"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  loop: "{{ nginx_vhosts }}"
+  notify:
+    - "Reload nginx"
+  tags:
+    - "nginx:config"
+
+- name: "Enable disable vhost config"
+  ansible.builtin.include_tasks: "enable_disable_config.yaml"
+  loop: "{{ nginx_vhosts }}"
   loop_control:
-    loop_var: 'vhosts'
+    loop_var: "vhost"
+  notify:
+    - "Reload nginx"
   tags:
-    - 'ngnix:config'
+    - "ngnix:config"
 ...
