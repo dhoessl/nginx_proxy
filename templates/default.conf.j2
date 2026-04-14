@@ -1,65 +1,45 @@
-# {{ ansible_managed }}
-{% if item.value.forward_http | default(false) is sameas true -%}
-server {
-  # forward http to https
-  listen 80;
-  {% if item.value.ipv6|default(false) is sameas true and item.value.ipv4|default(true) is sameas true -%}
-  listen [::]:80;
-  {% elif item.value.ipv6|default(false) is sameas true and item.value.ipv4|default(true) is sameas false -%}
-  listen [::]:80 ipv6only=on;
-  {% endif -%}
-  server_name {{ item.value.domains | join(" ") }};
-
-  # prevent nginx http server detection
-  server_tokens {{ item.value.server_tokens | default("off") }};
-
-  # Enforce https
-  return 301 https://$server_name$request_uri;
-}
-{% endif -%}
-
 server {
   # basic configs
-  {% if item.value.ssl|default(false) is sameas true -%}
-  {% if item.value.ipv4|default(true) is sameas true -%}
-  listen 443 ssl{% if item.value.http2 | default(true) is sameas true %} http2{% endif -%};
-  {% endif -%}
-  {% if item.value.ipv6|default(false) is sameas true and item.value.ipv4|default(true) is sameas true -%}
-  listen [::]:443 ssl{% if item.value.http2 | default(true) is sameas true %} http2{% endif -%};
-  {% elif item.value.ipv6|default(false) is sameas true and item.value.ipv4|default(true) is sameas false -%}
-  listen [::]:443 ssl ipv6only=on{% if item.value.http2 | default(true) is sameas true %} http2{% endif -%};
-  {% endif -%}
-  {% else -%}
+{% if item.ssl | default(false) is sameas true -%}
+{% if item.ipv4 | default(true) is sameas true %}
+  listen 443 ssl{% if item.http2 | default(true) is sameas true %} http2{% endif -%};
+{% endif -%}
+{% if item.ipv6 | default(false) is sameas true %}
+  listen [::]:443 ssl{% if item.ipv4 | default(true) is sameas false %} ipv6only=on{% endif %}{% if item.http2 | default(true) is sameas true %} http2{% endif -%};
+{% endif -%}
+{% else -%}
+{% if item.ipv4 | default(true) is sameas true %}
   listen 80;
-  {% if item.value.ipv6|default(false) is sameas true -%}
-  listen [::]:80;
-  {% endif -%}
-  {% endif -%}
-  {% if item.value.doc_root is defined -%}
-  root {{ item.value.doc_root }};
-  {% endif -%}
+{% endif -%}
+{% if item.ipv6 | default(false) is sameas true %}
+  listen [::]:80{% if item.ipv4 | default(true) is sameas false %} ipv6only=on{% endif %};
+{% endif -%}
+{% endif -%}
+{% if item.doc_root is defined %}
+  root {{ item.doc_root }};
+{% endif %}
+  server_name {{ item.domains | join(" ") }};
+{% if item.charset is defined %}
 
-  server_name {{ item.value.domains | join(" ") }};
+  charset {{ item.charset }};
+{% endif %}
 
-  {% if item.value.charset is defined -%}
-  charset {{ item.value.charset }};
-  {% endif -%}
   # prevent nginx http server detection
-  server_tokens {{ item.value.server_tokens | default("off") }};
+  server_tokens {{ item.server_tokens | default("off") }};
+{% if item.custom_data is defined %}
 
-  {% if item.value.custom_data is defined -%}
-  {{ item.value.custom_data }}
-  {% endif -%}
+  {{ item.custom_data }}
+{% endif %}
+{% if item.ssl | default(false) is sameas true %}
 
-  {% if item.value.ssl|default(false) is sameas true -%}
   # SSL Certs
-  ssl_certificate       {{ item.value.certificate.pub }};
-  ssl_certificate_key   {{ item.value.certificate.key }};
+  ssl_certificate       {{ item.certificate.pub }};
+  ssl_certificate_key   {{ item.certificate.key }};
 
   # SSL Hardening
-  ssl_protocols               {{ item.value.protocols|default('TLSv1.3') }};
+  ssl_protocols               {{ item.protocols | default('TLSv1.3') }};
   ssl_prefer_server_ciphers   on;
-  ssl_ciphers                 {{ item.value.ciphers|default('EECDH+CHACHA20:EECDH+AESGCM:EDH+AESGCM') }};
+  ssl_ciphers                 {{ item.ciphers | default('EECDH+CHACHA20:EECDH+AESGCM:EDH+AESGCM') }};
   ssl_conf_command            Ciphersuites  TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256;
   ssl_conf_command            Options       PrioritizeChaCha;
   ssl_ecdh_curve              secp384r1;
@@ -68,7 +48,7 @@ server {
   ssl_session_tickets         off;
   ssl_stapling                on;
   ssl_stapling_verify         on;
-  {% endif -%}
+{% endif %}
 
   # Hardening
   add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
@@ -77,57 +57,55 @@ server {
   add_header Referrer-Policy          "no-referrer"       always;
   add_header X-Content-Type-Options   "nosniff"           always;
 
-
   # Client Settings
-  client_max_body_size    {{ item.value.client.max_body_size|default('1M') }};
-  client_body_timeout     {{ item.value.client.body_timeout|default('60s') }};
+  client_max_body_size    {{ item.client.max_body_size | default('1M') }};
+  client_body_timeout     {{ item.client.body_timeout | default('60s') }};
+{% if item.fastcgi is defined %}
 
-  {% if item.value.fastcgi is defined -%}
   # Fastcgi
-  fastcgi_buffers         {{ item.value.fastcgi.buffer.number|default('8') }} {{ item.value.fastcgi.buffer.size|default('4K') }};
-  {% if item.value.fastcgi.hide_header -%}
-  {% for field in item.value.fastcgi.hide_header|default([]) -%}
+  fastcgi_buffers         {{ item.fastcgi.buffer.number|default('8') }} {{ item.fastcgi.buffer.size|default('4K') }};
+{% if item.fastcgi.hide_header -%}
+{% for field in item.fastcgi.hide_header | default([]) %}
   fastcgi_hide_header     {{ field }};
-  {% endfor -%}
-  {% endif -%}
-  {% endif -%}
+{% endfor -%}
+{% endif -%}
+{% endif -%}
+{% if item.proxy is defined %}
 
-  {% if item.value.proxy is defined -%}
   location / {
     # Proxy Settings
-    proxy_pass            http://localhost:{{ item.value.proxy.port }}/{{ item.value.proxy.extend |default("") }};
-    proxy_http_version    {{ item.value.proxy.version|default('1.1') }};
-    {% if item.value.proxy.default_header|default(true) is sameas true -%}
+    proxy_pass            http://localhost:{{ item.proxy.port }}/{{ item.proxy.extend | default("") }};
+    proxy_http_version    {{ item.proxy.version | default('1.1') }};
+{% if item.proxy.default_header | default(true) is sameas true %}
     proxy_set_header      Upgrade             $http_upgrade;
     proxy_set_header      Connection          "Upgrade";
     proxy_set_header      Host                $host;
     proxy_set_header      X-Real-IP           $remote_addr;
     proxy_set_header      X-Forwarded_for     $proxy_add_x_forwarded_for;
     proxy_set_header      X-Forwarded-Proto   $scheme;
-    {% endif -%}
-    {% for header in item.value.proxy.header|default([]) -%}
-      proxy_set_header  {{ header.field }} {{ header.value }};
-    {% endfor -%}
-    {% if item.value.proxy.extra_data is defined -%}
-    {% filter indent(width=4) -%}
-    {{ item.value.proxy.extra_data }}
-    {%- endfilter -%}
-    {% endif -%}
+{% endif -%}
+{% for header in item.proxy.header | default([]) %}
+    proxy_set_header  {{ header.field }} {{ header.value }};
+{% endfor -%}
+{% if item.proxy.extra_data is defined %}
+    {{ item.proxy.extra_data | indent(4) }}
+{% endif %}
   }
-  {% endif -%}
-  {% if item.value.static is defined and item.value.static.locations is defined-%}
-  {% for loc in item.value.static.locations|default([]) -%}
-  location {{ loc.location|default('/') }} {
-    {% if loc.default_type is defined -%}
-    default_type      {{ loc.default_type|default('application/json') }};
-    {% endif -%}
-    {% if loc.rc is defined and loc.output is defined -%}
-    return            {{ loc.rc|default('200') }} {{ loc.output|default("'{}'") }};
-    {% endif -%}
-    {% if loc.data is defined -%}
+{% endif -%}
+{% if item.static is defined and item.static.locations is defined-%}
+{% for loc in item.static.locations | default([]) %}
+
+  location {{ loc.location | default('/') }} {
+{% if loc.default_type is defined %}
+    default_type      {{ loc.default_type | default('application/json') }};
+{% endif -%}
+{% if loc.rc is defined and loc.output is defined %}
+    return            {{ loc.rc | default('200') }} {{ loc.output | default("'{}'") }};
+{% endif -%}
+{% if loc.data is defined %}
     {{ loc.data }}
-    {% endif -%}
+{% endif %}
   }
-  {% endfor -%}
-  {% endif -%}
+{% endfor -%}
+{%- endif -%}
 }

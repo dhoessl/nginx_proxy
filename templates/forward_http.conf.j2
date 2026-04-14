@@ -1,0 +1,14 @@
+server {
+  # forward http to https
+  listen 80;
+  {% if item.ipv6 | default(false) is sameas true -%}
+  listen [::]:80{% if item.ipv4 | default(true) is sameas false %} ipv6only=on{% endif %};
+  {% endif -%}
+  server_name {{ item.domains | join(" ") }};
+
+  # prevent nginx http server detection
+  server_tokens {{ item.server_tokens | default("off") }};
+
+  # Enforce https
+  return 301 https://$server_name$request_uri;
+}
