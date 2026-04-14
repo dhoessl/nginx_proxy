@@ -90,7 +90,6 @@ server {
     proxy_set_header  {{ header.field }} {{ header.value }};
   {% endfor -%}
   {% if item.proxy.extra_data is defined -%}
-  {% filter indent(width=4) -%}
     {{ item.proxy.extra_data }}
   {% endif -%}
   {%- endfilter -%}
