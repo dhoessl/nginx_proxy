@@ -1,37 +1,37 @@
 server {
   # basic configs
-  {% if item.ssl | default(false) is sameas true -%}
-  {% if item.ipv4 | default(true) is sameas true -%}
+{% if item.ssl | default(false) is sameas true -%}
+{% if item.ipv4 | default(true) is sameas true %}
   listen 443 ssl{% if item.http2 | default(true) is sameas true %} http2{% endif -%};
-  {% endif -%}
-  {% if item.ipv6 | default(false) is sameas true -%}
+{% endif -%}
+{% if item.ipv6 | default(false) is sameas true %}
   listen [::]:443 ssl{% if item.ipv4 | default(true) is sameas false %} ipv6only=on{% endif %}{% if item.http2 | default(true) is sameas true %} http2{% endif -%};
-  {% endif -%}
-  {% else -%}
-  {% if item.ipv4 | default(true) is sameas true -%}
+{% endif -%}
+{% else -%}
+{% if item.ipv4 | default(true) is sameas true %}
   listen 80;
-  {% endif -%}
-  {% if item.ipv6 | default(false) is sameas true -%}
+{% endif -%}
+{% if item.ipv6 | default(false) is sameas true %}
   listen [::]:80{% if item.ipv4 | default(true) is sameas false %} ipv6only=on{% endif %};
-  {% endif -%}
-  {% endif -%}
-  {% if item.doc_root is defined -%}
+{% endif -%}
+{% endif -%}
+{% if item.doc_root is defined %}
   root {{ item.doc_root }};
-  {% endif -%}
-
+{% endif %}
   server_name {{ item.domains | join(" ") }};
+{% if item.charset is defined %}
 
-  {% if item.charset is defined -%}
   charset {{ item.charset }};
-  {% endif -%}
+{% endif %}
+
   # prevent nginx http server detection
   server_tokens {{ item.server_tokens | default("off") }};
+{% if item.custom_data is defined %}
 
-  {% if item.custom_data is defined -%}
   {{ item.custom_data }}
-  {% endif %}
+{% endif %}
+{% if item.ssl | default(false) is sameas true %}
 
-  {% if item.ssl | default(false) is sameas true -%}
   # SSL Certs
   ssl_certificate       {{ item.certificate.pub }};
   ssl_certificate_key   {{ item.certificate.key }};
@@ -48,7 +48,7 @@ server {
   ssl_session_tickets         off;
   ssl_stapling                on;
   ssl_stapling_verify         on;
-  {% endif -%}
+{% endif %}
 
   # Hardening
   add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
@@ -57,63 +57,55 @@ server {
   add_header Referrer-Policy          "no-referrer"       always;
   add_header X-Content-Type-Options   "nosniff"           always;
 
-
   # Client Settings
   client_max_body_size    {{ item.client.max_body_size | default('1M') }};
   client_body_timeout     {{ item.client.body_timeout | default('60s') }};
+{% if item.fastcgi is defined %}
 
-  {% if item.fastcgi is defined -%}
   # Fastcgi
   fastcgi_buffers         {{ item.fastcgi.buffer.number|default('8') }} {{ item.fastcgi.buffer.size|default('4K') }};
-  {% if item.fastcgi.hide_header -%}
-  {% for field in item.fastcgi.hide_header | default([]) -%}
+{% if item.fastcgi.hide_header -%}
+{% for field in item.fastcgi.hide_header | default([]) %}
   fastcgi_hide_header     {{ field }};
-  {% endfor -%}
-  {% endif -%}
-  {% endif -%}
+{% endfor -%}
+{% endif -%}
+{% endif -%}
+{% if item.proxy is defined %}
 
-  {% if item.proxy is defined -%}
   location / {
-  {% filter indent(width=4) -%}
     # Proxy Settings
     proxy_pass            http://localhost:{{ item.proxy.port }}/{{ item.proxy.extend | default("") }};
     proxy_http_version    {{ item.proxy.version | default('1.1') }};
-  {% if item.proxy.default_header | default(true) is sameas true -%}
+{% if item.proxy.default_header | default(true) is sameas true %}
     proxy_set_header      Upgrade             $http_upgrade;
     proxy_set_header      Connection          "Upgrade";
     proxy_set_header      Host                $host;
     proxy_set_header      X-Real-IP           $remote_addr;
     proxy_set_header      X-Forwarded_for     $proxy_add_x_forwarded_for;
     proxy_set_header      X-Forwarded-Proto   $scheme;
-  {% endif -%}
-  {% for header in item.proxy.header | default([]) -%}
+{% endif -%}
+{% for header in item.proxy.header | default([]) %}
     proxy_set_header  {{ header.field }} {{ header.value }};
-  {% endfor -%}
-  {% if item.proxy.extra_data is defined -%}
+{% endfor -%}
+{% if item.proxy.extra_data is defined %}
     {{ item.proxy.extra_data }}
-  {% endif -%}
-  {%- endfilter -%}
+{% endif %}
   }
-  {% endif -%}
-  {% if item.static is defined and item.static.locations is defined-%}
-  {% for loc in item.static.locations | default([]) -%}
+{% endif -%}
+{% if item.static is defined and item.static.locations is defined-%}
+{% for loc in item.static.locations | default([]) %}
+
   location {{ loc.location | default('/') }} {
-  {% if loc.default_type is defined -%}
-  {% filter indent(width=4) -%}
+{% if loc.default_type is defined %}
     default_type      {{ loc.default_type | default('application/json') }};
-  {%- endfilter -%}
-  {% endif -%}
-  {% if loc.rc is defined and loc.output is defined -%}
-  {% filter indent(width=4) -%}
+{% endif -%}
+{% if loc.rc is defined and loc.output is defined %}
     return            {{ loc.rc | default('200') }} {{ loc.output | default("'{}'") }};
-  {%- endfilter -%}
-  {% endif -%}
-  {% if loc.data is defined -%}
-  {% filter indent(width=4) -%}
+{% endif -%}
+{% if loc.data is defined %}
     {{ loc.data }}
-  {%- endfilter -%}
-  {% endif -%}
+{% endif %}
   }
-  {% endfor -%}
-  {%- endif -%}
+{% endfor -%}
+{%- endif -%}
 }
