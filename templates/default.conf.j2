@@ -29,7 +29,7 @@ server {
 
   {% if item.custom_data is defined -%}
   {{ item.custom_data }}
-  {% endif -%}
+  {% endif %}
 
   {% if item.ssl | default(false) is sameas true -%}
   # SSL Certs
@@ -77,36 +77,36 @@ server {
     # Proxy Settings
     proxy_pass            http://localhost:{{ item.proxy.port }}/{{ item.proxy.extend | default("") }};
     proxy_http_version    {{ item.proxy.version | default('1.1') }};
-    {% if item.proxy.default_header | default(true) is sameas true -%}
+  {% if item.proxy.default_header | default(true) is sameas true -%}
     proxy_set_header      Upgrade             $http_upgrade;
     proxy_set_header      Connection          "Upgrade";
     proxy_set_header      Host                $host;
     proxy_set_header      X-Real-IP           $remote_addr;
     proxy_set_header      X-Forwarded_for     $proxy_add_x_forwarded_for;
     proxy_set_header      X-Forwarded-Proto   $scheme;
-    {% endif -%}
-    {% for header in item.proxy.header | default([]) -%}
+  {% endif -%}
+  {% for header in item.proxy.header | default([]) -%}
     proxy_set_header  {{ header.field }} {{ header.value }};
-    {% endfor -%}
-    {% if item.proxy.extra_data is defined -%}
-    {% filter indent(width=4) -%}
+  {% endfor -%}
+  {% if item.proxy.extra_data is defined -%}
+  {% filter indent(width=4) -%}
     {{ item.proxy.extra_data }}
-    {%- endfilter -%}
-    {% endif -%}
+  {%- endfilter -%}
+  {% endif -%}
   }
   {% endif -%}
   {% if item.static is defined and item.static.locations is defined-%}
   {% for loc in item.static.locations | default([]) -%}
   location {{ loc.location | default('/') }} {
-    {% if loc.default_type is defined -%}
+  {% if loc.default_type is defined -%}
     default_type      {{ loc.default_type | default('application/json') }};
-    {% endif -%}
-    {% if loc.rc is defined and loc.output is defined -%}
+  {% endif -%}
+  {% if loc.rc is defined and loc.output is defined -%}
     return            {{ loc.rc | default('200') }} {{ loc.output | default("'{}'") }};
-    {% endif -%}
-    {% if loc.data is defined -%}
+  {% endif -%}
+  {% if loc.data is defined -%}
     {{ loc.data }}
-    {% endif -%}
+  {% endif -%}
   }
   {% endfor -%}
   {% endif -%}
