@@ -19,7 +19,7 @@ server {
   root {{ item.doc_root }};
   {% endif -%}
 
-  server_name {{ item.value.domains | join(" ") }};
+  server_name {{ item.domains | join(" ") }};
 
   {% if item.charset is defined -%}
   charset {{ item.charset }};
