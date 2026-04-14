@@ -88,7 +88,7 @@ server {
     proxy_set_header  {{ header.field }} {{ header.value }};
 {% endfor -%}
 {% if item.proxy.extra_data is defined %}
-    {{ item.proxy.extra_data }}
+    {{ item.proxy.extra_data | indent(4) }}
 {% endif %}
   }
 {% endif -%}
