@@ -49,8 +49,6 @@
   loop: "{{ nginx_vhosts }}"
   loop_control:
     loop_var: "vhost"
-  notify:
-    - "Reload nginx"
   tags:
     - "ngnix:config"
 ...
