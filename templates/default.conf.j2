@@ -74,6 +74,7 @@ server {
 
   {% if item.proxy is defined -%}
   location / {
+  {% filter indent(width=4) -%}
     # Proxy Settings
     proxy_pass            http://localhost:{{ item.proxy.port }}/{{ item.proxy.extend | default("") }};
     proxy_http_version    {{ item.proxy.version | default('1.1') }};
@@ -91,23 +92,29 @@ server {
   {% if item.proxy.extra_data is defined -%}
   {% filter indent(width=4) -%}
     {{ item.proxy.extra_data }}
-  {%- endfilter -%}
   {% endif -%}
+  {%- endfilter -%}
   }
   {% endif -%}
   {% if item.static is defined and item.static.locations is defined-%}
   {% for loc in item.static.locations | default([]) -%}
   location {{ loc.location | default('/') }} {
   {% if loc.default_type is defined -%}
+  {% filter indent(width=4) -%}
     default_type      {{ loc.default_type | default('application/json') }};
+  {%- endfilter -%}
   {% endif -%}
   {% if loc.rc is defined and loc.output is defined -%}
+  {% filter indent(width=4) -%}
     return            {{ loc.rc | default('200') }} {{ loc.output | default("'{}'") }};
+  {%- endfilter -%}
   {% endif -%}
   {% if loc.data is defined -%}
+  {% filter indent(width=4) -%}
     {{ loc.data }}
+  {%- endfilter -%}
   {% endif -%}
   }
   {% endfor -%}
-  {% endif -%}
+  {%- endif -%}
 }
