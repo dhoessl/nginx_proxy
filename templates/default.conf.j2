@@ -1,3 +1,6 @@
+{% if item.server_config is defined-%}
+{{ item.server_config }}
+{% endif %}
 server {
   # basic configs
 {% if item.ssl | default(false) is sameas true -%}
